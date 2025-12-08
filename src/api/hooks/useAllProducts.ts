@@ -8,21 +8,13 @@ export interface UseAllProductsParams {
 }
 
 export function useAllProducts({ baseUrl, enabled = true }: UseAllProductsParams) {
-  const [progress, setProgress] = useState({ page: 0, fetchedCount: 0 })
-
   return useQuery({
     queryKey: ['allProducts', baseUrl],
     queryFn: ({ signal }) => {
       if (!baseUrl) {
         throw new Error('Base URL is required')
       }
-      return getAllProducts(
-        baseUrl,
-        signal,
-        (page, fetchedCount) => {
-          setProgress({ page, fetchedCount })
-        }
-      )
+      return getAllProducts(baseUrl, signal)
     },
     enabled: enabled && !!baseUrl,
     staleTime: 1000 * 60 * 5, // 5 minutes
