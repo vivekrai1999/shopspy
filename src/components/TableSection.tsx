@@ -1,7 +1,7 @@
 import Table from "./Table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Product } from "../types/product";
-import { exportToCSV, exportToJSON, exportToXLS } from "../utils/export";
+import { exportToJSON, exportToXLS, exportToShopifyCSV } from "../utils/export";
 import toast from "react-hot-toast";
 
 interface TableSectionProps {
@@ -21,17 +21,13 @@ export default function TableSection({ products, columns, isLoading, onProductCl
     return products.filter((product) => rowSelection[String(product.id)]);
   };
 
-  const handleExport = (format: "csv" | "json" | "xls") => {
+  const handleExport = (format: "json" | "xls" | "shopify") => {
     const selectedProducts = getSelectedProducts();
     const productsToExport = selectedProducts.length > 0 ? selectedProducts : products;
     const filename = selectedProducts.length > 0 ? `selected-products-${new Date().toISOString().split("T")[0]}` : `all-products-${new Date().toISOString().split("T")[0]}`;
 
     try {
       switch (format) {
-        case "csv":
-          exportToCSV(productsToExport, filename);
-          toast.success(`Exported ${productsToExport.length} product(s) to CSV`);
-          break;
         case "json":
           exportToJSON(productsToExport, filename);
           toast.success(`Exported ${productsToExport.length} product(s) to JSON`);
@@ -39,6 +35,10 @@ export default function TableSection({ products, columns, isLoading, onProductCl
         case "xls":
           exportToXLS(productsToExport, filename);
           toast.success(`Exported ${productsToExport.length} product(s) to Excel`);
+          break;
+        case "shopify":
+          exportToShopifyCSV(productsToExport, filename);
+          toast.success(`Exported ${productsToExport.length} product(s) to Shopify CSV`);
           break;
       }
     } catch (error) {

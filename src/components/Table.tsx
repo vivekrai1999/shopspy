@@ -28,7 +28,7 @@ interface TableProps<TData> {
   rowSelection?: RowSelectionState
   onRowSelectionChange?: (selection: RowSelectionState) => void
   getRowId?: (row: TData) => string
-  onExport?: (format: 'csv' | 'json' | 'xls') => void
+  onExport?: (format: 'json' | 'xls' | 'shopify') => void
   selectedCount?: number
 }
 
@@ -409,16 +409,6 @@ export default function Table<TData extends object>({
                         </div>
                         <button
                           onClick={() => {
-                            onExport('csv')
-                            setShowMobileMenu(false)
-                          }}
-                          className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
-                        >
-                          <Download className="w-4 h-4" />
-                          Export CSV
-                        </button>
-                        <button
-                          onClick={() => {
                             onExport('json')
                             setShowMobileMenu(false)
                           }}
@@ -436,6 +426,16 @@ export default function Table<TData extends object>({
                         >
                           <Download className="w-4 h-4" />
                           Export Excel
+                        </button>
+                        <button
+                          onClick={() => {
+                            onExport('shopify')
+                            setShowMobileMenu(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export Shopify CSV
                         </button>
                         {selectedCount > 0 && (
                           <div className={`px-3 py-2 text-xs ${darkModeClasses.menuTextMuted} border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
@@ -581,16 +581,6 @@ export default function Table<TData extends object>({
                       </div>
                       <button
                         onClick={() => {
-                          onExport('csv')
-                          setShowExportMenu(false)
-                        }}
-                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
-                      >
-                        <Download className="w-4 h-4" />
-                        Export CSV
-                      </button>
-                      <button
-                        onClick={() => {
                           onExport('json')
                           setShowExportMenu(false)
                         }}
@@ -608,6 +598,16 @@ export default function Table<TData extends object>({
                       >
                         <Download className="w-4 h-4" />
                         Export Excel
+                      </button>
+                      <button
+                        onClick={() => {
+                          onExport('shopify')
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Shopify CSV
                       </button>
                       {selectedCount > 0 && (
                         <div className={`px-3 py-2 text-xs ${darkModeClasses.menuTextMuted} border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
