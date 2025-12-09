@@ -58,7 +58,7 @@ export default function HeroSection({
           </div>
 
           {/* Search Input */}
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <MapPin className="h-5 w-5 text-gray-400" />
@@ -76,7 +76,7 @@ export default function HeroSection({
             <button
               onClick={onFetch}
               disabled={!baseUrl.trim() || isLoading}
-              className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+              className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px] justify-center"
             >
               {isLoading ? (
                 <>

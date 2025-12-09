@@ -12,8 +12,9 @@ import {
   type VisibilityState,
   type ColumnPinningState,
   type ColumnSizingState,
+  type RowSelectionState,
 } from '@tanstack/react-table'
-import { Copy, Settings2, Pin, Eye, EyeOff } from 'lucide-react'
+import { Copy, Settings2, Pin, Eye, EyeOff, Download, ChevronDown, MoreVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface TableProps<TData> {
@@ -24,6 +25,11 @@ interface TableProps<TData> {
   isLoading?: boolean
   className?: string
   darkMode?: boolean
+  rowSelection?: RowSelectionState
+  onRowSelectionChange?: (selection: RowSelectionState) => void
+  getRowId?: (row: TData) => string
+  onExport?: (format: 'csv' | 'json' | 'xls') => void
+  selectedCount?: number
 }
 
 export default function Table<TData extends object>({
@@ -34,6 +40,11 @@ export default function Table<TData extends object>({
   isLoading = false,
   className = '',
   darkMode = false,
+  rowSelection,
+  onRowSelectionChange,
+  getRowId,
+  onExport,
+  selectedCount = 0,
 }: TableProps<TData>) {
   const [page, setPage] = useState(1)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -45,16 +56,34 @@ export default function Table<TData extends object>({
   })
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
   const [showColumnMenu, setShowColumnMenu] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
+  
+  const currentRowSelection = rowSelection !== undefined ? rowSelection : internalRowSelection
+  const handleRowSelectionChange = onRowSelectionChange 
+    ? (updater: any) => {
+        if (typeof updater === 'function') {
+          const newSelection = updater(currentRowSelection)
+          onRowSelectionChange(newSelection)
+        } else {
+          onRowSelectionChange(updater)
+        }
+      }
+    : setInternalRowSelection
 
   const table = useReactTable({
     data,
     columns,
+    getRowId: getRowId || ((_row: TData, index: number) => String(index)),
+    enableRowSelection: true,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       columnPinning,
       columnSizing,
+      rowSelection: currentRowSelection,
       pagination: {
         pageIndex: page - 1,
         pageSize,
@@ -65,6 +94,7 @@ export default function Table<TData extends object>({
     onColumnVisibilityChange: setColumnVisibility,
     onColumnPinningChange: setColumnPinning,
     onColumnSizingChange: setColumnSizing,
+    onRowSelectionChange: handleRowSelectionChange,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     onPaginationChange: (updater) => {
@@ -309,24 +339,134 @@ export default function Table<TData extends object>({
         {/* Column Controls */}
         <div className={`p-4 border-b ${darkModeClasses.header} flex items-center justify-between`}>
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-semibold ${darkModeClasses.headerText}`}>Columns</span>
+          {selectedCount > 0 && (
+            <div className={`px-3 py-1.5 text-sm font-medium ${darkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' : 'bg-blue-100 text-blue-700 border border-blue-200'} rounded-lg`}>
+              {selectedCount} product{selectedCount !== 1 ? 's' : ''} selected
+            </div>
+          )}
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowColumnMenu(!showColumnMenu)}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium ${darkModeClasses.button} rounded-lg transition-colors`}
-          >
-            <Settings2 className="w-4 h-4" />
-            <span>Manage Columns</span>
-          </button>
-          
-          {showColumnMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowColumnMenu(false)}
-              />
-              <div className={`absolute right-0 mt-2 w-64 ${darkModeClasses.menu} rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto scrollbar-hide border`}>
+        <div className="flex items-center gap-2">
+          {/* Mobile Kebab Menu */}
+          <div className="relative md:hidden">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className={`p-2 ${darkModeClasses.button} rounded-lg transition-colors`}
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {showMobileMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowMobileMenu(false)}
+                />
+                <div className={`absolute right-0 mt-2 w-56 ${darkModeClasses.menu} rounded-lg shadow-lg z-20 border`}>
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        // Select all rows
+                        const allRowIds: RowSelectionState = {}
+                        data.forEach((row, index) => {
+                          const rowId = getRowId ? getRowId(row) : String(index)
+                          allRowIds[rowId] = true
+                        })
+                        handleRowSelectionChange(allRowIds)
+                        setShowMobileMenu(false)
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                    >
+                      <Eye className="w-4 h-4" />
+                      Select All
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleRowSelectionChange({})
+                        setShowMobileMenu(false)
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Deselect All
+                    </button>
+                    <div className={`px-3 py-2 text-xs font-semibold ${darkModeClasses.menuTextMuted} uppercase tracking-wider border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
+                      Columns
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowColumnMenu(true)
+                        setShowMobileMenu(false)
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                    >
+                      <Settings2 className="w-4 h-4" />
+                      Manage Columns
+                    </button>
+                    {onExport && (
+                      <>
+                        <div className={`px-3 py-2 text-xs font-semibold ${darkModeClasses.menuTextMuted} uppercase tracking-wider border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
+                          Export
+                        </div>
+                        <button
+                          onClick={() => {
+                            onExport('csv')
+                            setShowMobileMenu(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export CSV
+                        </button>
+                        <button
+                          onClick={() => {
+                            onExport('json')
+                            setShowMobileMenu(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export JSON
+                        </button>
+                        <button
+                          onClick={() => {
+                            onExport('xls')
+                            setShowMobileMenu(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export Excel
+                        </button>
+                        {selectedCount > 0 && (
+                          <div className={`px-3 py-2 text-xs ${darkModeClasses.menuTextMuted} border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
+                            {selectedCount} product{selectedCount !== 1 ? 's' : ''} selected
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowColumnMenu(!showColumnMenu)}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium ${darkModeClasses.button} rounded-lg transition-colors`}
+            >
+              <Settings2 className="w-4 h-4" />
+              <span>Manage Columns</span>
+            </button>
+            
+            {showColumnMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowColumnMenu(false)}
+                />
+                <div className={`absolute right-0 md:right-0 left-0 md:left-auto mt-2 w-64 max-w-[calc(100vw-2rem)] ${darkModeClasses.menu} rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto scrollbar-hide border`}>
                 <div className="p-2">
                   <div className={`px-3 py-2 text-xs font-semibold ${darkModeClasses.menuTextMuted} uppercase tracking-wider border-b ${darkMode ? 'border-white/10' : 'border-gray-100'}`}>
                     Show/Hide Columns
@@ -388,6 +528,97 @@ export default function Table<TData extends object>({
                 </div>
               </div>
             </>
+          )}
+          </div>
+
+          {onExport && (
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium ${darkModeClasses.button} rounded-lg transition-colors`}
+              >
+                <Download className="w-4 h-4" />
+                <span>Export</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {showExportMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className={`absolute right-0 mt-2 w-48 ${darkModeClasses.menu} rounded-lg shadow-lg z-20 border`}>
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          // Select all rows
+                          const allRowIds: RowSelectionState = {}
+                          data.forEach((row, index) => {
+                            const rowId = getRowId ? getRowId(row) : String(index)
+                            allRowIds[rowId] = true
+                          })
+                          handleRowSelectionChange(allRowIds)
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        Select All
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleRowSelectionChange({})
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Deselect All
+                      </button>
+                      <div className={`px-3 py-2 text-xs font-semibold ${darkModeClasses.menuTextMuted} uppercase tracking-wider border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
+                        Export
+                      </div>
+                      <button
+                        onClick={() => {
+                          onExport('csv')
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export CSV
+                      </button>
+                      <button
+                        onClick={() => {
+                          onExport('json')
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export JSON
+                      </button>
+                      <button
+                        onClick={() => {
+                          onExport('xls')
+                          setShowExportMenu(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm ${darkModeClasses.menuItem} ${darkModeClasses.menuText} rounded-md flex items-center gap-2`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Excel
+                      </button>
+                      {selectedCount > 0 && (
+                        <div className={`px-3 py-2 text-xs ${darkModeClasses.menuTextMuted} border-t ${darkMode ? 'border-white/10' : 'border-gray-200'} mt-1 pt-2`}>
+                          {selectedCount} product{selectedCount !== 1 ? 's' : ''} selected
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

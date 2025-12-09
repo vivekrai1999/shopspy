@@ -17,6 +17,7 @@ function HomePage() {
   const [shouldFetch, setShouldFetch] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'variants' | 'images' | 'options'>('overview')
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const tableSectionRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
@@ -59,6 +60,32 @@ function HomePage() {
   }
 
   const columns: ColumnDef<Product>[] = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          checked={table.getIsAllPageRowsSelected()}
+          onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+          className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer accent-blue-500"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={row.getIsSelected()}
+          onChange={(e) => {
+            e.stopPropagation()
+            row.toggleSelected(e.target.checked)
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer accent-blue-500"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      size: 50,
+    },
     {
       accessorKey: 'id',
       header: 'ID',
@@ -471,6 +498,8 @@ function HomePage() {
             columns={columns}
             isLoading={isLoading}
             onProductClick={handleProductClick}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </div>
       )}
