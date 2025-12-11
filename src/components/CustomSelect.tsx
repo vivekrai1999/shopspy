@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Plus } from 'lucide-react';
 
 export interface SelectOption {
     value: string;
@@ -27,6 +27,8 @@ export interface SelectProps {
     searchPlaceholder?: string;
     showCardBackground?: boolean;
     groupedOptions?: Record<string, SelectOption[]>;
+    allowCustom?: boolean;
+    customValueLabel?: string;
     className?: string;
     containerClassName?: string;
 }
@@ -51,6 +53,8 @@ const Select: React.FC<SelectProps> = ({
     searchable = false,
     searchPlaceholder = 'Search...',
     showCardBackground = false,
+    allowCustom = false,
+    customValueLabel,
     className,
     containerClassName,
 }) => {
@@ -66,6 +70,9 @@ const Select: React.FC<SelectProps> = ({
         : (options || []);
 
     const selectedOption = value ? allOptions.find(option => option.value === value) : null;
+    
+    // Check if current value is a custom value (not in options)
+    const isCustomValue = allowCustom && value && !selectedOption && value.trim() !== '';
 
     // Filter options based on search term
     const filteredOptions = searchable
@@ -73,6 +80,11 @@ const Select: React.FC<SelectProps> = ({
             option.label.toLowerCase().includes(searchTerm.toLowerCase())
         )
         : allOptions;
+    
+    // Check if search term doesn't match any options (for custom value suggestion)
+    const hasNoMatches = searchable && allowCustom && searchTerm.trim() !== '' && 
+        filteredOptions.length === 0 && 
+        !allOptions.some(opt => opt.value.toLowerCase() === searchTerm.toLowerCase().trim());
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -113,6 +125,25 @@ const Select: React.FC<SelectProps> = ({
         onChange(optionValue);
         setIsOpen(false);
         setSearchTerm('');
+    };
+
+    const handleAddCustomValue = (customValue: string) => {
+        const trimmedValue = customValue.trim();
+        if (trimmedValue) {
+            onChange(trimmedValue);
+            setIsOpen(false);
+            setSearchTerm('');
+        }
+    };
+
+    const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter' && hasNoMatches && allowCustom) {
+            event.preventDefault();
+            handleAddCustomValue(searchTerm);
+        } else if (event.key === 'Escape') {
+            setIsOpen(false);
+            setSearchTerm('');
+        }
     };
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -269,8 +300,12 @@ const Select: React.FC<SelectProps> = ({
                     disabled={disabled}
                     onKeyDown={handleKeyDown}
                 >
-                    <span className={`truncate ${selectedOption ? 'text-white' : 'text-white/60'}`}>
-                        {selectedOption ? selectedOption.label : placeholder}
+                    <span className={`truncate ${selectedOption || isCustomValue ? 'text-white' : 'text-white/60'}`}>
+                        {selectedOption 
+                            ? selectedOption.label 
+                            : isCustomValue 
+                                ? (customValueLabel ? `${customValueLabel}: ${value}` : value)
+                                : placeholder}
                     </span>
                     <ChevronDown
                         className={`ml-2 h-4 w-4 text-white/60 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''
@@ -298,6 +333,7 @@ const Select: React.FC<SelectProps> = ({
                                     placeholder={searchPlaceholder}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
                                     onClick={(e) => e.stopPropagation()}
                                     className="w-full px-3 py-1.5 text-sm border border-white/10 rounded-md bg-gray-900/50 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
@@ -329,7 +365,40 @@ const Select: React.FC<SelectProps> = ({
                                 )}
                             </button>
                             
-                            {filteredOptions.length === 0 && (!groupedOptions || Object.values(groupedOptions).flat().length === 0) ? (
+                            {/* Custom value option - show when search doesn't match and allowCustom is true */}
+                            {hasNoMatches && (
+                                <button
+                                    type="button"
+                                    className="w-full px-3 py-2 text-left text-sm transition-colors duration-150 flex items-center gap-2 text-blue-400 hover:bg-blue-500/20 cursor-pointer focus:outline-none focus:bg-blue-500/20 border-b border-white/10"
+                                    onClick={() => handleAddCustomValue(searchTerm)}
+                                >
+                                    <Plus className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate flex-1">
+                                        {customValueLabel 
+                                            ? `${customValueLabel}: "${searchTerm.trim()}"`
+                                            : `Add "${searchTerm.trim()}" as custom value`}
+                                    </span>
+                                </button>
+                            )}
+                            
+                            {/* Show custom value option if current value is custom */}
+                            {isCustomValue && !hasNoMatches && (
+                                <button
+                                    type="button"
+                                    data-value={value}
+                                    className="w-full px-3 py-2 text-left text-sm transition-colors duration-150 flex items-center justify-between bg-blue-500/20 text-blue-400 font-medium cursor-pointer focus:outline-none focus:bg-blue-500/30 border-b border-white/10"
+                                    onClick={() => handleOptionClick(value)}
+                                >
+                                    <span className="truncate flex-1">
+                                        {customValueLabel ? `${customValueLabel}: ${value}` : value}
+                                    </span>
+                                    {showSelectedIndicator && (
+                                        <Check className="h-4 w-4 text-blue-400 ml-2 flex-shrink-0" />
+                                    )}
+                                </button>
+                            )}
+                            
+                            {filteredOptions.length === 0 && (!groupedOptions || Object.values(groupedOptions).flat().length === 0) && !hasNoMatches ? (
                                 <div className="px-3 py-2 text-sm text-white/60 text-center">
                                     {emptyMessage}
                                 </div>

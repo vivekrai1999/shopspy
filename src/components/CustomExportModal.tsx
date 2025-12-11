@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { X, Plus, Trash2, Download, FileSpreadsheet, Upload } from 'lucide-react'
 import type { Product } from '../types/product'
 import type { FieldMapping } from '../utils/export'
-import { getAvailableProductKeys, exportToCustomCSV, exportToCustomXLS } from '../utils/export'
+import { getAvailableProductKeysFromData, exportToCustomCSV, exportToCustomXLS } from '../utils/export'
 import toast from 'react-hot-toast'
 import Select from './CustomSelect'
 import * as XLSX from 'xlsx'
@@ -19,7 +19,8 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
   ])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const availableKeys = getAvailableProductKeys()
+  // Extract keys dynamically from actual product data
+  const availableKeys = getAvailableProductKeysFromData(products)
   const groupedKeys = availableKeys.reduce((acc, key) => {
     if (!acc[key.category]) {
       acc[key.category] = []
@@ -187,19 +188,30 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
       {/* Modal */}
       <div className="relative bg-gray-800 rounded-2xl border border-white/10 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div>
-            <h2 className="text-xl font-bold text-white">Custom Export</h2>
-            <p className="text-sm text-white/60 mt-1">
-              Map CSV/Excel fields to product data keys
-            </p>
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-xl font-bold text-white">Custom Export</h2>
+              <p className="text-sm text-white/60 mt-1">
+                Map CSV/Excel fields to product data keys
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-white/80" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-white/80" />
-          </button>
+          {/* Preview Info - Always visible at top */}
+          {fieldMappings.length > 0 && (
+            <div className="p-3 bg-blue-500/10 border border-blue-400/20 rounded-lg">
+              <p className="text-sm text-blue-300">
+                <span className="font-semibold">{fieldMappings.length}</span> field(s) will be
+                exported for <span className="font-semibold">{products.length}</span> product(s)
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -278,7 +290,8 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                           }
                           groupedOptions={groupedKeys}
                           searchable={true}
-                          searchPlaceholder="Search keys..."
+                          allowCustom={true}
+                          searchPlaceholder="Search keys or enter custom value"
                           showSelectedIndicator={true}
                           showItemCount={true}
                           maxHeight="300px"
@@ -306,16 +319,6 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                 </div>
               )}
             </div>
-
-            {/* Preview Info */}
-            {fieldMappings.length > 0 && (
-              <div className="p-4 bg-blue-500/10 border border-blue-400/20 rounded-lg">
-                <p className="text-sm text-blue-300">
-                  <span className="font-semibold">{fieldMappings.length}</span> field(s) will be
-                  exported for <span className="font-semibold">{products.length}</span> product(s)
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

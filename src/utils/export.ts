@@ -327,8 +327,45 @@ export interface FieldMapping {
 }
 
 /**
+ * Checks if a path looks like a product data path (not a literal value)
+ * Returns true if the path has syntax that indicates it's a product key path
+ */
+function looksLikeProductPath(path: string, product: Product): boolean {
+  if (!path || !path.trim()) return false
+  
+  const trimmedPath = path.trim()
+  
+  // If path contains brackets (array access) or dots (nested properties), it's definitely a path
+  if (trimmedPath.includes('[') || (trimmedPath.includes('.') && !trimmedPath.startsWith('.'))) {
+    return true
+  }
+  
+  // Check if it's a direct property of the product object
+  if (trimmedPath in product) {
+    return true
+  }
+  
+  // Check if it's a known product property (single word, no spaces, alphanumeric/underscore)
+  // Product paths are typically: alphanumeric, underscore, no spaces
+  const pathPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+  if (pathPattern.test(trimmedPath)) {
+    // Check common product properties
+    const commonPaths = ['id', 'title', 'handle', 'vendor', 'product_type', 'tags', 'body_html', 
+                         'published_at', 'created_at', 'updated_at', 'variants', 'images', 'options',
+                         'length']
+    if (commonPaths.includes(trimmedPath)) {
+      return true
+    }
+  }
+  
+  // If it contains spaces, special characters, or doesn't match path pattern, it's likely a literal
+  return false
+}
+
+/**
  * Extracts value from product using a path string
  * Supports nested paths like "variants[0].price", "images[0].src", "variants.length", etc.
+ * Returns null if path doesn't resolve (to distinguish from empty string values)
  */
 function getValueByPath(product: Product, path: string): any {
   // Handle special case for .length
@@ -339,7 +376,7 @@ function getValueByPath(product: Product, path: string): any {
 
     for (const part of parts) {
       if (value === null || value === undefined) {
-        return 0
+        return null // Return null to indicate path didn't resolve
       }
 
       // Handle array access like "variants[0]"
@@ -352,7 +389,7 @@ function getValueByPath(product: Product, path: string): any {
       }
     }
 
-    return Array.isArray(value) ? value.length : 0
+    return Array.isArray(value) ? value.length : null
   }
 
   // Regular path traversal
@@ -361,7 +398,7 @@ function getValueByPath(product: Product, path: string): any {
 
   for (const part of parts) {
     if (value === null || value === undefined) {
-      return ''
+      return null // Return null to indicate path didn't resolve
     }
 
     // Handle array access like "variants[0]"
@@ -374,11 +411,12 @@ function getValueByPath(product: Product, path: string): any {
     }
   }
 
-  // Format the value appropriately
+  // If value is still null/undefined after traversal, path didn't resolve
   if (value === null || value === undefined) {
-    return ''
+    return null
   }
 
+  // Format the value appropriately
   // Handle arrays (like tags)
   if (Array.isArray(value)) {
     return value.join(', ')
@@ -436,7 +474,22 @@ export function exportToCustomCSV(
       if (!mapping.productKey || !mapping.productKey.trim()) {
         return ''
       }
+      
+      // Try to get value from product path
       const value = getValueByPath(product, mapping.productKey)
+      
+      // If value is null, it means the path didn't resolve
+      if (value === null) {
+        // Check if it looks like a product path
+        if (looksLikeProductPath(mapping.productKey, product)) {
+          // It looks like a path but didn't resolve - return empty
+          return ''
+        } else {
+          // Doesn't look like a path - treat as custom literal value
+          return mapping.productKey
+        }
+      }
+      
       return value
     })
     csvRows.push(row.map(escapeCSV).join(','))
@@ -474,8 +527,22 @@ export function exportToCustomXLS(
       if (!mapping.productKey || !mapping.productKey.trim()) {
         row[headers[index]] = ''
       } else {
+        // Try to get value from product path
         const value = getValueByPath(product, mapping.productKey)
-        row[headers[index]] = value
+        
+        // If value is null, it means the path didn't resolve
+        if (value === null) {
+          // Check if it looks like a product path
+          if (looksLikeProductPath(mapping.productKey, product)) {
+            // It looks like a path but didn't resolve - return empty
+            row[headers[index]] = ''
+          } else {
+            // Doesn't look like a path - treat as custom literal value
+            row[headers[index]] = mapping.productKey
+          }
+        } else {
+          row[headers[index]] = value
+        }
       }
     })
     return row
@@ -491,7 +558,121 @@ export function exportToCustomXLS(
 }
 
 /**
- * Get available product keys for mapping
+ * Recursively extract all paths from an object
+ */
+function extractPaths(obj: any, prefix: string = '', maxDepth: number = 5, currentDepth: number = 0): string[] {
+  if (currentDepth >= maxDepth) return []
+  
+  const paths: string[] = []
+  
+  if (obj === null || obj === undefined) {
+    return paths
+  }
+  
+  if (Array.isArray(obj)) {
+    // For arrays, add index-based paths (limit to first few items for performance)
+    const maxArrayItems = 3
+    for (let i = 0; i < Math.min(obj.length, maxArrayItems); i++) {
+      const item = obj[i]
+      if (item !== null && item !== undefined) {
+        if (typeof item === 'object' && !Array.isArray(item)) {
+          const nestedPaths = extractPaths(item, `${prefix}[${i}].`, maxDepth, currentDepth + 1)
+          paths.push(...nestedPaths)
+        } else if (Array.isArray(item)) {
+          const nestedPaths = extractPaths(item, `${prefix}[${i}].`, maxDepth, currentDepth + 1)
+          paths.push(...nestedPaths)
+        } else {
+          paths.push(`${prefix}[${i}]`)
+        }
+      }
+    }
+    // Add length path for arrays
+    if (prefix) {
+      paths.push(`${prefix}length`)
+    } else {
+      paths.push('length')
+    }
+  } else if (typeof obj === 'object') {
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const newPrefix = prefix ? `${prefix}${key}` : key
+        const value = obj[key]
+        
+        // Add the current path
+        paths.push(newPrefix)
+        
+        // Recursively process nested objects and arrays
+        if (value !== null && value !== undefined && typeof value === 'object') {
+          const nestedPaths = extractPaths(value, `${newPrefix}.`, maxDepth, currentDepth + 1)
+          paths.push(...nestedPaths)
+        }
+      }
+    }
+  }
+  
+  return paths
+}
+
+/**
+ * Get available product keys dynamically from actual product data
+ */
+export function getAvailableProductKeysFromData(products: Product[]): { label: string; key: string; category: string }[] {
+  if (!products || products.length === 0) {
+    return []
+  }
+  
+  // Use the first product to extract all possible paths
+  const sampleProduct = products[0]
+  const allPaths = extractPaths(sampleProduct)
+  
+  // Remove duplicates and sort
+  const uniquePaths = Array.from(new Set(allPaths)).sort()
+  
+  // Categorize paths
+  const categorized: { label: string; key: string; category: string }[] = []
+  
+  for (const path of uniquePaths) {
+    let category = 'Other'
+    let label = path
+    
+    // Categorize based on path
+    if (path.startsWith('id') || path.startsWith('title') || path.startsWith('handle') || 
+        path.startsWith('vendor') || path.startsWith('product_type') || path.startsWith('tags') ||
+        path.startsWith('body_html') || path.startsWith('published_at') || path.startsWith('created_at') ||
+        path.startsWith('updated_at')) {
+      category = 'Basic Info'
+    } else if (path.startsWith('variants')) {
+      category = 'Variant Info'
+    } else if (path.startsWith('images')) {
+      category = 'Image Info'
+    } else if (path.startsWith('options')) {
+      category = 'Options Info'
+    } else if (path.endsWith('length')) {
+      category = 'Counts'
+    }
+    
+    // Format label - make it more readable
+    label = path
+      .replace(/\[(\d+)\]/g, '[$1]')
+      .replace(/\./g, ' → ')
+      .replace(/_/g, ' ')
+      .split(/\s+/)
+      .map(word => {
+        // Capitalize first letter, keep array indices as is
+        if (word.match(/^\[\d+\]$/)) return word
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      })
+      .join(' ')
+      .replace(/\s*→\s*/g, ' → ')
+    
+    categorized.push({ label, key: path, category })
+  }
+  
+  return categorized
+}
+
+/**
+ * Get available product keys for mapping (legacy function for backward compatibility)
  */
 export function getAvailableProductKeys(): { label: string; key: string; category: string }[] {
   return [
