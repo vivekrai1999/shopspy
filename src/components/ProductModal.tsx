@@ -507,15 +507,21 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                         </a>
                       </div>
                     </div>
-                    <div className="p-2">
-                      <p 
-                        className="text-xs text-white/70 truncate cursor-pointer hover:text-blue-400 transition-colors group/item inline-flex items-center gap-2"
-                        onClick={() => copyToClipboard(image.src)}
-                        title="Click to copy URL"
-                      >
-                        <span>{image.width} × {image.height}</span>
-                        <Copy className="w-4 h-4 opacity-0 group-hover/item:opacity-100 text-blue-400 flex-shrink-0" />
+                    <div className="p-2 space-y-2">
+                      <p className="text-xs text-white/70">
+                        {image.width} × {image.height}
                       </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          copyToClipboard(image.src)
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-xs font-medium bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors border border-blue-400/20"
+                        title="Copy image link"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Image Link</span>
+                      </button>
                     </div>
                   </div>
                 )
