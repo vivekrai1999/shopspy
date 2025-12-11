@@ -186,7 +186,7 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-gray-800 rounded-2xl border border-white/10 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative bg-gray-800 rounded-2xl border border-white/10 shadow-2xl w-full max-w-4xl max-h-[95vh] h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between mb-3">
@@ -219,7 +219,7 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
           <div className="space-y-4">
             {/* File Upload Section */}
             <div className="p-4 bg-gray-700/30 rounded-lg border border-white/10">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-white mb-1">Import Template</h3>
                   <p className="text-xs text-white/60">
@@ -236,7 +236,7 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                 />
                 <label
                   htmlFor="template-file-input"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors cursor-pointer text-sm font-medium border border-purple-400/20"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors cursor-pointer text-sm font-medium border border-purple-400/20 w-full sm:w-auto"
                 >
                   <Upload className="w-4 h-4" />
                   <span>Upload Template</span>
@@ -261,9 +261,9 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                 {fieldMappings.map((mapping, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-4 bg-gray-700/30 rounded-lg border border-white/10"
+                    className="flex flex-col sm:flex-row items-start gap-3 p-4 bg-gray-700/30 rounded-lg border border-white/10"
                   >
-                    <div className="flex-1 grid grid-cols-2 gap-3">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                       {/* Field Name Input */}
                       <div>
                         <label className="block text-xs font-semibold text-white/70 mb-1.5">
@@ -294,9 +294,10 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                           searchPlaceholder="Search keys or enter custom value"
                           showSelectedIndicator={true}
                           showItemCount={true}
-                          maxHeight="300px"
+                          maxHeight="200px"
                           variant="default"
                           size="md"
+                          placement={index === 0 ? "bottom-start" : "top-start"}
                         />
                       </div>
                     </div>
@@ -304,7 +305,7 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
                     {/* Remove Button */}
                     <button
                       onClick={() => removeField(index)}
-                      className="mt-6 p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors flex-shrink-0"
+                      className="mt-0 sm:mt-6 p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors flex-shrink-0 self-start sm:self-auto"
                       title="Remove field"
                     >
                       <Trash2 className="w-4 h-4" />

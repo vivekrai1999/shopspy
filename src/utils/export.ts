@@ -368,6 +368,9 @@ function looksLikeProductPath(path: string, product: Product): boolean {
  * Returns null if path doesn't resolve (to distinguish from empty string values)
  */
 function getValueByPath(product: Product, path: string): any {
+  // Fix paths with incorrect dot before array brackets (e.g., "variants.[0]" -> "variants[0]")
+  path = path.replace(/\.\[(\d+)\]/g, '[$1]')
+  
   // Handle special case for .length
   if (path.endsWith('.length')) {
     const arrayPath = path.replace('.length', '')
@@ -396,17 +399,46 @@ function getValueByPath(product: Product, path: string): any {
   const parts = path.split('.')
   let value: any = product
 
-  for (const part of parts) {
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]
+    
+    // If value is null or undefined, path doesn't resolve
     if (value === null || value === undefined) {
-      return null // Return null to indicate path didn't resolve
+      return null
     }
 
     // Handle array access like "variants[0]"
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
     if (arrayMatch) {
-      const [, arrayName, index] = arrayMatch
-      value = value[arrayName]?.[parseInt(index, 10)]
+      const [, arrayName, indexStr] = arrayMatch
+      const index = parseInt(indexStr, 10)
+      
+      // Get the array from the current value
+      const array = value[arrayName]
+      
+      // Check if array exists and is actually an array
+      if (!Array.isArray(array)) {
+        return null
+      }
+      
+      // Check if index is valid
+      if (isNaN(index) || index < 0 || index >= array.length) {
+        return null
+      }
+      
+      // Access the array element
+      value = array[index]
     } else {
+      // Regular property access
+      // For objects, check if property exists
+      if (typeof value === 'object' && value !== null) {
+        // Check if property exists in the object
+        if (!(part in value)) {
+          return null
+        }
+      }
+      
+      // Access the property
       value = value[part]
     }
   }
@@ -468,8 +500,8 @@ export function exportToCustomCSV(
   csvRows.push(headers.map(escapeCSV).join(','))
 
   // Generate rows
-  products.forEach((product) => {
-    const row = fieldMappings.map(mapping => {
+  products.forEach((product, productIndex) => {
+    const row = fieldMappings.map((mapping, mappingIndex) => {
       // If productKey is empty, keep the field empty
       if (!mapping.productKey || !mapping.productKey.trim()) {
         return ''
@@ -489,7 +521,6 @@ export function exportToCustomCSV(
           return mapping.productKey
         }
       }
-      
       return value
     })
     csvRows.push(row.map(escapeCSV).join(','))
@@ -520,7 +551,7 @@ export function exportToCustomXLS(
   const headers = fieldMappings.map(mapping => mapping.fieldName)
 
   // Generate rows
-  const rows = products.map((product) => {
+  const rows = products.map((product, productIndex) => {
     const row: any = {}
     fieldMappings.forEach((mapping, index) => {
       // If productKey is empty, keep the field empty
@@ -572,17 +603,26 @@ function extractPaths(obj: any, prefix: string = '', maxDepth: number = 5, curre
   if (Array.isArray(obj)) {
     // For arrays, add index-based paths (limit to first few items for performance)
     const maxArrayItems = 3
+    // Remove trailing dot from prefix if present (array access doesn't need dot before bracket)
+    const cleanPrefix = prefix.endsWith('.') ? prefix.slice(0, -1) : prefix
+    
     for (let i = 0; i < Math.min(obj.length, maxArrayItems); i++) {
       const item = obj[i]
       if (item !== null && item !== undefined) {
+        // Build the array access path correctly (no dot before bracket)
+        const arrayPath = cleanPrefix ? `${cleanPrefix}[${i}]` : `[${i}]`
+        
         if (typeof item === 'object' && !Array.isArray(item)) {
-          const nestedPaths = extractPaths(item, `${prefix}[${i}].`, maxDepth, currentDepth + 1)
+          // For nested objects, add dot for property access
+          const nestedPaths = extractPaths(item, `${arrayPath}.`, maxDepth, currentDepth + 1)
           paths.push(...nestedPaths)
         } else if (Array.isArray(item)) {
-          const nestedPaths = extractPaths(item, `${prefix}[${i}].`, maxDepth, currentDepth + 1)
+          // For nested arrays, add dot for further array access
+          const nestedPaths = extractPaths(item, `${arrayPath}.`, maxDepth, currentDepth + 1)
           paths.push(...nestedPaths)
         } else {
-          paths.push(`${prefix}[${i}]`)
+          // For primitive values, just add the array access path
+          paths.push(arrayPath)
         }
       }
     }

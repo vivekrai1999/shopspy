@@ -190,7 +190,7 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              Variants ({product.variants.length})
+              Variants <span className="hidden sm:inline">({product.variants.length})</span>
             </button>
           )}
           {product.images.length > 0 && (
@@ -202,7 +202,7 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              Images ({product.images.length})
+              Images <span className="hidden sm:inline">({product.images.length})</span>
             </button>
           )}
           {product.options.length > 0 && (
@@ -214,7 +214,7 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              Options ({product.options.length})
+              Options <span className="hidden sm:inline">({product.options.length})</span>
             </button>
           )}
         </div>
@@ -475,27 +475,21 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                       const allLinks = product.images.map(img => img.src).join(', ')
                       copyToClipboard(allLinks)
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors text-sm font-medium border border-green-400/20"
+                    className="flex items-center justify-center p-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors border border-green-400/20"
                     title="Copy all image links (comma-separated)"
                   >
                     <Copy className="w-4 h-4" />
-                    <span>Copy All Links</span>
                   </button>
                   <button
                     onClick={downloadAllImagesAsZip}
                     disabled={isDownloading}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium border border-blue-400/20"
+                    className="flex items-center justify-center p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-blue-400/20"
+                    title="Download all images as ZIP"
                   >
                     {isDownloading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Downloading...</span>
-                      </>
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <>
-                        <Download className="w-4 h-4" />
-                        <span>Download All as ZIP</span>
-                      </>
+                      <Download className="w-4 h-4" />
                     )}
                   </button>
                 </div>

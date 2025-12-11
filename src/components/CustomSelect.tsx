@@ -212,9 +212,6 @@ const Select: React.FC<SelectProps> = ({
 
                 return (
                     <div key={groupLabel}>
-                        <div className="px-3 py-1.5 text-xs font-semibold text-white/60 uppercase tracking-wider bg-gray-800/50 sticky top-0">
-                            {groupLabel}
-                        </div>
                         {filteredGroupOptions.map((option) => (
                             <button
                                 key={option.value}
