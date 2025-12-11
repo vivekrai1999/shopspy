@@ -18,6 +18,7 @@ function HomePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'variants' | 'images' | 'options'>('overview')
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [productNameFilter, setProductNameFilter] = useState<string[]>([])
   const tableSectionRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
@@ -33,6 +34,22 @@ function HomePage() {
       baseUrl: baseUrl.trim() || undefined,
       enabled: shouldFetch && !!baseUrl.trim(),
     })
+
+  // Filter products based on uploaded product names
+  const filteredProducts = productNameFilter.length > 0
+    ? products?.filter(product => 
+        productNameFilter.some(filterName => 
+          product.title.toLowerCase().trim() === filterName.toLowerCase().trim()
+        )
+      ) || []
+    : products || []
+
+  // Clear row selection when filter changes
+  useEffect(() => {
+    if (productNameFilter.length > 0) {
+      setRowSelection({})
+    }
+  }, [productNameFilter])
 
   // Auto-scroll to table when products are loaded after button press
   useEffect(() => {
@@ -494,12 +511,15 @@ function HomePage() {
       {shouldFetch && products && products.length > 0 && (
         <div ref={tableSectionRef}>
           <TableSection
-            products={products}
+            products={filteredProducts}
+            allProducts={products}
             columns={columns}
             isLoading={isLoading}
             onProductClick={handleProductClick}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
+            productNameFilter={productNameFilter}
+            onProductNameFilterChange={setProductNameFilter}
           />
         </div>
       )}

@@ -318,3 +318,207 @@ export function exportToShopifyCSV(products: Product[], filename: string = 'shop
   saveAs(blob, `${filename}.csv`)
 }
 
+/**
+ * Field mapping interface for custom exports
+ */
+export interface FieldMapping {
+  fieldName: string // CSV/Excel column name
+  productKey: string // Path to product data (e.g., "title", "variants[0].price", "images[0].src")
+}
+
+/**
+ * Extracts value from product using a path string
+ * Supports nested paths like "variants[0].price", "images[0].src", "variants.length", etc.
+ */
+function getValueByPath(product: Product, path: string): any {
+  // Handle special case for .length
+  if (path.endsWith('.length')) {
+    const arrayPath = path.replace('.length', '')
+    const parts = arrayPath.split('.')
+    let value: any = product
+
+    for (const part of parts) {
+      if (value === null || value === undefined) {
+        return 0
+      }
+
+      // Handle array access like "variants[0]"
+      const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
+      if (arrayMatch) {
+        const [, arrayName, index] = arrayMatch
+        value = value[arrayName]?.[parseInt(index, 10)]
+      } else {
+        value = value[part]
+      }
+    }
+
+    return Array.isArray(value) ? value.length : 0
+  }
+
+  // Regular path traversal
+  const parts = path.split('.')
+  let value: any = product
+
+  for (const part of parts) {
+    if (value === null || value === undefined) {
+      return ''
+    }
+
+    // Handle array access like "variants[0]"
+    const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
+    if (arrayMatch) {
+      const [, arrayName, index] = arrayMatch
+      value = value[arrayName]?.[parseInt(index, 10)]
+    } else {
+      value = value[part]
+    }
+  }
+
+  // Format the value appropriately
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  // Handle arrays (like tags)
+  if (Array.isArray(value)) {
+    return value.join(', ')
+  }
+
+  // Handle booleans
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No'
+  }
+
+  // Handle dates
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    return new Date(value).toLocaleString()
+  }
+
+  // Handle HTML content
+  if (typeof value === 'string' && value.includes('<') && value.includes('>')) {
+    if (typeof document !== 'undefined') {
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = value
+      return (tempDiv.textContent || tempDiv.innerText || '').replace(/\s+/g, ' ').trim()
+    }
+    // Fallback: simple HTML tag removal if document is not available
+    return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+  }
+
+  return String(value)
+}
+
+/**
+ * Exports products to custom CSV format with field mapping
+ */
+export function exportToCustomCSV(
+  products: Product[],
+  fieldMappings: FieldMapping[],
+  filename: string = 'custom-products'
+) {
+  if (products.length === 0) {
+    throw new Error('No products to export')
+  }
+
+  if (fieldMappings.length === 0) {
+    throw new Error('No field mappings defined')
+  }
+
+  // Extract headers from field mappings
+  const headers = fieldMappings.map(mapping => mapping.fieldName)
+  const csvRows: string[] = []
+  csvRows.push(headers.map(escapeCSV).join(','))
+
+  // Generate rows
+  products.forEach((product) => {
+    const row = fieldMappings.map(mapping => {
+      const value = getValueByPath(product, mapping.productKey)
+      return value
+    })
+    csvRows.push(row.map(escapeCSV).join(','))
+  })
+
+  const csvContent = csvRows.join('\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  saveAs(blob, `${filename}.csv`)
+}
+
+/**
+ * Exports products to custom Excel format with field mapping
+ */
+export function exportToCustomXLS(
+  products: Product[],
+  fieldMappings: FieldMapping[],
+  filename: string = 'custom-products'
+) {
+  if (products.length === 0) {
+    throw new Error('No products to export')
+  }
+
+  if (fieldMappings.length === 0) {
+    throw new Error('No field mappings defined')
+  }
+
+  // Extract headers from field mappings
+  const headers = fieldMappings.map(mapping => mapping.fieldName)
+
+  // Generate rows
+  const rows = products.map((product) => {
+    const row: any = {}
+    fieldMappings.forEach((mapping, index) => {
+      const value = getValueByPath(product, mapping.productKey)
+      row[headers[index]] = value
+    })
+    return row
+  })
+
+  const worksheet = XLSX.utils.json_to_sheet(rows)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Products')
+  
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+  const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  saveAs(blob, `${filename}.xlsx`)
+}
+
+/**
+ * Get available product keys for mapping
+ */
+export function getAvailableProductKeys(): { label: string; key: string; category: string }[] {
+  return [
+    // Basic Product Info
+    { label: 'Product ID', key: 'id', category: 'Basic Info' },
+    { label: 'Product Title', key: 'title', category: 'Basic Info' },
+    { label: 'Handle', key: 'handle', category: 'Basic Info' },
+    { label: 'Vendor', key: 'vendor', category: 'Basic Info' },
+    { label: 'Product Type', key: 'product_type', category: 'Basic Info' },
+    { label: 'Tags', key: 'tags', category: 'Basic Info' },
+    { label: 'Description', key: 'body_html', category: 'Basic Info' },
+    { label: 'Published At', key: 'published_at', category: 'Basic Info' },
+    { label: 'Created At', key: 'created_at', category: 'Basic Info' },
+    { label: 'Updated At', key: 'updated_at', category: 'Basic Info' },
+    
+    // First Variant Info
+    { label: 'Price (First Variant)', key: 'variants[0].price', category: 'Variant Info' },
+    { label: 'Compare At Price (First Variant)', key: 'variants[0].compare_at_price', category: 'Variant Info' },
+    { label: 'SKU (First Variant)', key: 'variants[0].sku', category: 'Variant Info' },
+    { label: 'Available (First Variant)', key: 'variants[0].available', category: 'Variant Info' },
+    { label: 'Weight (First Variant)', key: 'variants[0].grams', category: 'Variant Info' },
+    { label: 'Requires Shipping (First Variant)', key: 'variants[0].requires_shipping', category: 'Variant Info' },
+    { label: 'Taxable (First Variant)', key: 'variants[0].taxable', category: 'Variant Info' },
+    { label: 'Option 1 (First Variant)', key: 'variants[0].option1', category: 'Variant Info' },
+    { label: 'Option 2 (First Variant)', key: 'variants[0].option2', category: 'Variant Info' },
+    { label: 'Option 3 (First Variant)', key: 'variants[0].option3', category: 'Variant Info' },
+    
+    // Image Info
+    { label: 'First Image URL', key: 'images[0].src', category: 'Image Info' },
+    { label: 'First Image Width', key: 'images[0].width', category: 'Image Info' },
+    { label: 'First Image Height', key: 'images[0].height', category: 'Image Info' },
+    
+    // Counts
+    { label: 'Variants Count', key: 'variants.length', category: 'Counts' },
+    { label: 'Images Count', key: 'images.length', category: 'Counts' },
+    { label: 'Options Count', key: 'options.length', category: 'Counts' },
+  ]
+}
+
