@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { X, Plus, Trash2, Download, FileSpreadsheet, Upload } from 'lucide-react'
 import type { Product } from '../types/product'
 import type { FieldMapping } from '../utils/export'
@@ -18,6 +18,17 @@ export default function CustomExportModal({ products, onClose }: CustomExportMod
     { fieldName: 'Price', productKey: 'variants[0].price' },
   ])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    // Lock body scroll
+    document.body.style.overflow = 'hidden'
+    
+    // Cleanup: restore body scroll when modal closes
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
 
   // Extract keys dynamically from actual product data
   const availableKeys = getAvailableProductKeysFromData(products)
