@@ -34,6 +34,21 @@ const copyToClipboard = async (text: string) => {
   }
 }
 
+const cleanHtmlContent = (html: string): string => {
+  // Create a temporary div element to parse HTML
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = html
+  
+  // Get text content (automatically removes HTML tags and decodes entities)
+  let text = tempDiv.textContent || tempDiv.innerText || ''
+  
+  // Replace multiple whitespace characters (spaces, newlines, tabs) with single space
+  text = text.replace(/\s+/g, ' ')
+  
+  // Trim the result
+  return text.trim()
+}
+
 export default function ProductModal({ product, onClose, activeTab, onTabChange }: ProductModalProps) {
   const [isDownloading, setIsDownloading] = useState(false)
 
@@ -326,7 +341,7 @@ export default function ProductModal({ product, onClose, activeTab, onTabChange 
                   <label className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2 block">Description</label>
                   <div 
                     className="text-sm text-white/80 bg-gray-700/30 rounded-lg p-4 border border-white/10 cursor-pointer hover:border-blue-400/30 transition-colors"
-                    onClick={() => copyToClipboard(product.body_html.replace(/<[^>]*>/g, '').trim())}
+                    onClick={() => copyToClipboard(cleanHtmlContent(product.body_html))}
                     title="Click to copy"
                   >
                     <div dangerouslySetInnerHTML={{ __html: product.body_html }} />

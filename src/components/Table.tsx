@@ -213,6 +213,21 @@ export default function Table<TData extends object>({
     setPage(1)
   }
 
+  const cleanHtmlContent = (html: string): string => {
+    // Create a temporary div element to parse HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = html
+    
+    // Get text content (automatically removes HTML tags and decodes entities)
+    let text = tempDiv.textContent || tempDiv.innerText || ''
+    
+    // Replace multiple whitespace characters (spaces, newlines, tabs) with single space
+    text = text.replace(/\s+/g, ' ')
+    
+    // Trim the result
+    return text.trim()
+  }
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -245,7 +260,19 @@ export default function Table<TData extends object>({
     e.stopPropagation() // Prevent row click
     
     if (cellContent.trim()) {
-      copyToClipboard(cellContent.trim())
+      // Check if content contains HTML tags
+      const hasHtmlTags = /<[^>]*>/g.test(cellContent)
+      let cleanedContent: string
+      
+      if (hasHtmlTags) {
+        // Clean HTML tags, entities, and spacing
+        cleanedContent = cleanHtmlContent(cellContent)
+      } else {
+        // Just clean up excessive whitespace (multiple spaces, newlines, tabs)
+        cleanedContent = cellContent.replace(/\s+/g, ' ').trim()
+      }
+      
+      copyToClipboard(cleanedContent)
     }
   }
 
