@@ -500,8 +500,8 @@ export function exportToCustomCSV(
   csvRows.push(headers.map(escapeCSV).join(','))
 
   // Generate rows
-  products.forEach((product, productIndex) => {
-    const row = fieldMappings.map((mapping, mappingIndex) => {
+  products.forEach((product, _productIndex) => {
+    const row = fieldMappings.map((mapping, _mappingIndex) => {
       // If productKey is empty, keep the field empty
       if (!mapping.productKey || !mapping.productKey.trim()) {
         return ''
@@ -551,7 +551,7 @@ export function exportToCustomXLS(
   const headers = fieldMappings.map(mapping => mapping.fieldName)
 
   // Generate rows
-  const rows = products.map((product, productIndex) => {
+  const rows = products.map((product, _productIndex) => {
     const row: any = {}
     fieldMappings.forEach((mapping, index) => {
       // If productKey is empty, keep the field empty
