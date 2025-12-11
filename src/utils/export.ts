@@ -432,6 +432,10 @@ export function exportToCustomCSV(
   // Generate rows
   products.forEach((product) => {
     const row = fieldMappings.map(mapping => {
+      // If productKey is empty, keep the field empty
+      if (!mapping.productKey || !mapping.productKey.trim()) {
+        return ''
+      }
       const value = getValueByPath(product, mapping.productKey)
       return value
     })
@@ -466,8 +470,13 @@ export function exportToCustomXLS(
   const rows = products.map((product) => {
     const row: any = {}
     fieldMappings.forEach((mapping, index) => {
-      const value = getValueByPath(product, mapping.productKey)
-      row[headers[index]] = value
+      // If productKey is empty, keep the field empty
+      if (!mapping.productKey || !mapping.productKey.trim()) {
+        row[headers[index]] = ''
+      } else {
+        const value = getValueByPath(product, mapping.productKey)
+        row[headers[index]] = value
+      }
     })
     return row
   })

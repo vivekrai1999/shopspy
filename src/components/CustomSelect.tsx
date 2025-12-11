@@ -65,7 +65,7 @@ const Select: React.FC<SelectProps> = ({
         ? Object.values(groupedOptions).flat()
         : (options || []);
 
-    const selectedOption = allOptions.find(option => option.value === value);
+    const selectedOption = value ? allOptions.find(option => option.value === value) : null;
 
     // Filter options based on search term
     const filteredOptions = searchable
@@ -309,6 +309,26 @@ const Select: React.FC<SelectProps> = ({
                             className="py-1 overflow-y-auto"
                             style={{ maxHeight }}
                         >
+                            {/* Clear option */}
+                            <button
+                                type="button"
+                                className={`
+                                    w-full px-3 py-2 text-left text-sm
+                                    transition-colors duration-150 flex items-center justify-between
+                                    ${!value
+                                        ? 'bg-blue-500/20 text-blue-400 font-medium'
+                                        : 'text-white/90 hover:bg-gray-700/50'
+                                    }
+                                    cursor-pointer focus:outline-none focus:bg-gray-700/50 border-b border-white/10
+                                `}
+                                onClick={() => handleOptionClick('')}
+                            >
+                                <span className="truncate flex-1 italic">(Leave empty)</span>
+                                {!value && showSelectedIndicator && (
+                                    <Check className="h-4 w-4 text-blue-400 ml-2 flex-shrink-0" />
+                                )}
+                            </button>
+                            
                             {filteredOptions.length === 0 && (!groupedOptions || Object.values(groupedOptions).flat().length === 0) ? (
                                 <div className="px-3 py-2 text-sm text-white/60 text-center">
                                     {emptyMessage}
