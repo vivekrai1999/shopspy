@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAllProductsWithProgress } from '../api/hooks/useAllProducts'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Product } from '../types/product'
@@ -526,6 +527,35 @@ function HomePage() {
 
       <div ref={featuresRef}>
         <FeaturesSection />
+      </div>
+
+      {/* Shopify Components Section */}
+      <div className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-blue-900 py-24 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-indigo-500 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+              Shopify Components
+            </h2>
+            <p className="text-xl text-white/80 max-w-2xl mx-auto mb-8">
+              Explore and use reusable Shopify store components for your projects
+            </p>
+            <Link
+              to="/shopify-components"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors border border-purple-400/20 text-sm font-medium"
+            >
+              <span>View All Components</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div ref={aboutRef}>
