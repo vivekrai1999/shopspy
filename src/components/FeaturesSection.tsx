@@ -1,4 +1,4 @@
-import { Download, Filter, Copy, Pin, Eye, Settings2, Search } from 'lucide-react'
+import { Download, Filter, Copy, Pin, Eye, Upload, AlertCircle, FileSpreadsheet, Image, Package, Zap } from 'lucide-react'
 
 export default function FeaturesSection() {
   return (
@@ -19,10 +19,58 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        {/* Bento Grid - Perfect 4x4 Square Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-4 gap-4 max-w-4xl mx-auto auto-rows-fr">
-          {/* Row 1: Medium Feature - Filtering (spans 2 cols, 1 row) */}
-          <div className="md:col-span-2 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+        {/* Bento Grid - 3x3 Modern Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-4 max-w-6xl mx-auto">
+          {/* Row 1, Col 1: Logo/Brand Card */}
+          <div className="md:col-span-1 md:row-span-1 bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/20 hover:border-purple-400/40 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 flex items-center justify-center group">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                <Package className="w-8 h-8 text-purple-300" />
+              </div>
+              <h3 className="text-2xl font-bold text-white">shopspy</h3>
+            </div>
+          </div>
+
+          {/* Row 1, Col 2: Product Name Filtering */}
+          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
+              <Upload className="w-6 h-6 text-blue-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Product Name Filter</h3>
+            <p className="text-white/70 text-sm">
+              Upload a text file with product names to filter and find missing products instantly.
+            </p>
+          </div>
+
+          {/* Row 1, Col 3: Missing Products Detection */}
+          <div className="md:col-span-1 md:row-span-1 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 backdrop-blur-sm rounded-2xl p-6 border border-yellow-400/20 hover:border-yellow-400/40 hover:shadow-2xl hover:shadow-yellow-500/20 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-yellow-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-yellow-500/30 transition-all border border-yellow-400/20">
+              <AlertCircle className="w-6 h-6 text-yellow-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Missing Products</h3>
+            <p className="text-white/70 text-sm">
+              Automatically detect which products from your list are not found in the store.
+            </p>
+          </div>
+
+          {/* Row 2, Col 1-2: Custom Export (Large) */}
+          <div className="md:col-span-2 md:row-span-1 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-purple-400/20 hover:border-purple-400/40 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-16 h-16 bg-purple-500/30 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all border border-purple-400/20">
+                <FileSpreadsheet className="w-8 h-8 text-purple-300" />
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-white mb-1">Custom Export</div>
+                <div className="text-purple-300/80 text-sm">Field Mappings</div>
+              </div>
+            </div>
+            <p className="text-white/70 text-sm md:text-base leading-relaxed">
+              Create custom CSV/Excel exports with your own field mappings. Map any product data path or use custom literal values.
+            </p>
+          </div>
+
+          {/* Row 2, Col 3: Advanced Filtering */}
+          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
             <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
               <Filter className="w-6 h-6 text-blue-400" />
             </div>
@@ -32,69 +80,45 @@ export default function FeaturesSection() {
             </p>
           </div>
 
-          {/* Row 1: Medium Feature - Column Visibility (spans 2 cols, 1 row) */}
-          <div className="md:col-span-2 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Eye className="w-6 h-6 text-blue-400" />
+          {/* Row 3, Col 1: Export Options */}
+          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-green-400/30 hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-green-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-green-500/30 transition-all border border-green-400/20">
+              <Download className="w-6 h-6 text-green-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Custom Column Visibility</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Export Formats</h3>
             <p className="text-white/70 text-sm">
-              Show or hide columns of your choice. Pin important columns for easy reference while scrolling.
+              Export to Excel, CSV, JSON, or Shopify-compatible formats. Perfect for data analysis and sharing.
             </p>
           </div>
 
-          {/* Row 2-3: Large Feature - Export (spans 2 cols, 2 rows) */}
-          <div className="md:col-span-2 md:row-span-2 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-500/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Download className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-2 md:mb-3">Export to Excel & CSV</h3>
-            <p className="text-white/70 text-sm md:text-base leading-relaxed">
-              Download your product data in Excel or CSV format for further analysis and reporting. Perfect for data analysis and sharing with your team.
-            </p>
-          </div>
-
-          {/* Row 2-3: Large Feature - Sort & Organize (spans 2 cols, 2 rows) */}
-          <div className="md:col-span-2 md:row-span-2 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-500/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Settings2 className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-2 md:mb-3">Sort & Organize</h3>
-            <p className="text-white/70 text-sm md:text-base leading-relaxed">
-              Sort by any column in ascending or descending order. Organize your data exactly how you need it with powerful sorting capabilities.
-            </p>
-          </div>
-
-          {/* Row 4: Small Feature - Copy (spans 1 col, 1 row) */}
-          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+          {/* Row 3, Col 2: Image Management */}
+          <div className="md:col-span-1 md:row-span-1 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm rounded-2xl p-6 border border-blue-400/20 hover:border-blue-400/40 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
             <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Copy className="w-6 h-6 text-blue-400" />
+              <Image className="w-6 h-6 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">One-Click Copy</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Image Management</h3>
             <p className="text-white/70 text-sm">
-              Copy any cell content directly to your clipboard.
+              View, copy, and download all product images. Download entire image sets as ZIP files.
             </p>
           </div>
 
-          {/* Row 4: Small Feature - Pin (spans 1 col, 1 row) */}
-          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Pin className="w-6 h-6 text-blue-400" />
+          {/* Row 3, Col 3: Quick Actions */}
+          <div className="md:col-span-1 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-purple-400/30 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-500/30 transition-all border border-purple-400/20">
+                <Zap className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1">Quick Actions</h3>
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Copy className="w-3 h-3" />
+                  <Pin className="w-3 h-3" />
+                  <Eye className="w-3 h-3" />
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Pin Columns</h3>
             <p className="text-white/70 text-sm">
-              Pin important columns for easy reference.
-            </p>
-          </div>
-
-          {/* Row 4: Medium Feature - Real-time Search (spans 2 cols, 1 row) */}
-          <div className="md:col-span-2 md:row-span-1 bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all border border-blue-400/20">
-              <Search className="w-6 h-6 text-blue-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Real-time Search</h3>
-            <p className="text-white/70 text-sm">
-              Search across all columns instantly. Get results as you type with lightning-fast performance.
+              One-click copy, pin columns, and customize visibility. Work faster with powerful shortcuts.
             </p>
           </div>
         </div>
